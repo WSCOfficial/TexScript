@@ -1,2 +1,2 @@
-# NovaScript-Coding
-A coding language
+# TexScript
+A coding language for developing.
