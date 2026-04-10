@@ -157,4 +157,4 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-// v0.1.0 - Initial release with basic 'say' and 'set' commands, variable interpolation, and error handling.
+// v0.2.0 - Initial release with basic 'say' and 'set' commands, variable interpolation, and error handling.
