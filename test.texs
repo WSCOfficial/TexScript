@@ -1,0 +1,3 @@
+say "Testing for whatever."
+set test = 2026
+say "Test has been set to $test."
