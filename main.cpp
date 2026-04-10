@@ -24,48 +24,79 @@ void debug(const std::string& msg) {
     }
 }
 
+// NEW: Replace $var$ inside strings
+std::string interpolate(const std::string& text, int lineNumber) {
+    std::string result;
+    for (size_t i = 0; i < text.size(); ) {
+        if (text[i] == '$') {
+            size_t end = text.find('$', i + 1);
+            if (end == std::string::npos) {
+                std::cerr << "Error (line " << lineNumber << "): Missing closing '$'.\n";
+                return result;
+            }
+
+            std::string varName = text.substr(i + 1, end - i - 1);
+
+            if (variables.count(varName)) {
+                result += std::to_string(variables[varName]);
+            } else {
+                std::cerr << "Error (line " << lineNumber << "): Unknown variable '" << varName << "'.\n";
+            }
+
+            i = end + 1;
+        } else {
+            result += text[i];
+            i++;
+        }
+    }
+    return result;
+}
+
 void runLine(const std::string& lineRaw, int lineNumber) {
     std::string line = trim(lineRaw);
 
     debug("Line " + std::to_string(lineNumber) + ": \"" + line + "\"");
 
     if (line.empty() || line.rfind("//", 0) == 0) {
-        debug("Skipped (empty/comment)");
         return;
     }
 
+    // SAY COMMAND
     if (line.rfind("say ", 0) == 0) {
         std::string content = trim(line.substr(4));
 
         if (content.empty()) {
-            std::cerr << "Error (line " << lineNumber << "): "
-                      << "Missing content for 'say'.\n";
+            std::cerr << "Error (line " << lineNumber << "): Missing content for 'say'.\n";
             return;
         }
 
+        // STRING WITH QUOTES
         if (content.front() == '"' && content.back() == '"' && content.size() >= 2) {
             std::string text = content.substr(1, content.size() - 2);
-            debug("say string: " + text);
+
+            // interpolate $var$
+            text = interpolate(text, lineNumber);
+
             std::cout << text << std::endl;
-        } else {
+        }
+        // VARIABLE NAME
+        else {
             if (variables.count(content)) {
-                debug("say variable: " + content + " = " + std::to_string(variables[content]));
                 std::cout << variables[content] << std::endl;
             } else {
-                std::cerr << "Error (line " << lineNumber << "): "
-                          << "Variable '" << content << "' not found.\n";
+                std::cerr << "Error (line " << lineNumber << "): Variable '" << content << "' not found.\n";
             }
         }
         return;
     }
 
+    // SET COMMAND
     if (line.rfind("set ", 0) == 0) {
         std::string rest = trim(line.substr(4));
         size_t eq = rest.find('=');
 
         if (eq == std::string::npos) {
-            std::cerr << "Error (line " << lineNumber << "): "
-                      << "Missing '=' in 'set' statement.\n";
+            std::cerr << "Error (line " << lineNumber << "): Missing '=' in 'set'.\n";
             return;
         }
 
@@ -73,30 +104,20 @@ void runLine(const std::string& lineRaw, int lineNumber) {
         std::string valueStr = trim(rest.substr(eq + 1));
 
         if (name.empty()) {
-            std::cerr << "Error (line " << lineNumber << "): "
-                      << "Missing variable name in 'set'.\n";
-            return;
-        }
-
-        if (valueStr.empty()) {
-            std::cerr << "Error (line " << lineNumber << "): "
-                      << "Missing value in 'set'.\n";
+            std::cerr << "Error (line " << lineNumber << "): Missing variable name.\n";
             return;
         }
 
         try {
             int value = std::stoi(valueStr);
             variables[name] = value;
-            debug("set " + name + " = " + std::to_string(value));
-        } catch (const std::exception& e) {
-            std::cerr << "Error (line " << lineNumber << "): "
-                      << "Invalid integer value '" << valueStr << "' in 'set'.\n";
+        } catch (...) {
+            std::cerr << "Error (line " << lineNumber << "): Invalid integer '" << valueStr << "'.\n";
         }
         return;
     }
 
-    std::cerr << "Error (line " << lineNumber << "): "
-              << "Unknown command: '" << line << "'\n";
+    std::cerr << "Error (line " << lineNumber << "): Unknown command '" << line << "'\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -115,17 +136,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (filename.empty()) {
-        std::cout << "Usage: texscript [--debug] <file.texs>\n";
-        return 1;
-    }
-
     if (!endsWith(filename, ".texs")) {
         std::cerr << "Error: File must have .texs extension.\n";
         return 1;
     }
-
-    debug("Opening file: " + filename);
 
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -140,7 +154,7 @@ int main(int argc, char* argv[]) {
         lineNumber++;
     }
 
-    debug("Execution finished.");
     return 0;
 }
 
+// v0.1.0 - Initial release with basic 'say' and 'set' commands, variable interpolation, and error handling.
