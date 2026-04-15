@@ -1,0 +1,39 @@
+.topbar {
+  width: 100%;
+  background: #1b1b1b;
+  color: white;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.topbar .left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar .logo {
+  height: 22px;
+}
+
+.topbar .title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.topbar .right a {
+  color: white;
+  text-decoration: none;
+  margin-left: 20px;
+  font-size: 15px;
+}
+
+.topbar .right a:hover {
+  text-decoration: underline;
+}
